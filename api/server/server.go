@@ -13,7 +13,7 @@ func SetUp() *iris.Application {
 	return app
 }
 
-// RunServer should start a server
+// RunServer should start server
 func RunServer(app *iris.Application) {
 	app.Run(
 		iris.Addr(os.Getenv("PORT")),

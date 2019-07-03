@@ -1,7 +1,9 @@
 package handlers
 
 import (
-	middleware "github.com/karlygrcm/proxy-app/api/middleware"
+	"encoding/json"
+
+	"github.com/karlygrcm/proxy-app/api/middleware"
 	"github.com/kataras/iris"
 )
 
@@ -10,6 +12,12 @@ func HandlerRedirection(app *iris.Application) {
 	app.Get("/ping", middleware.ProxyMiddleware, proxyHandler)
 }
 
-func proxyHandler(context iris.Context) {
-	context.JSON(iris.Map{"result": "ok"})
+func proxyHandler(c iris.Context) {
+	response, err := json.Marshal(middleware.Que)
+	if err != nil {
+		c.JSON(iris.Map{"status": 400, "result": "parse error"})
+		return
+	}
+	c.JSON(iris.Map{"result": string(response)})
+
 }

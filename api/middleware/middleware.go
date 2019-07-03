@@ -43,10 +43,7 @@ func (q *Queue) Read() []*Queue {
 	for scanner.Scan() {
 		count++
 		if scanner.Text() == "" {
-			fmt.Println("PUSHED", tmp)
 			count = 0
-			final = append(final, tmp)
-			tmp = &Queue{}
 
 			fmt.Println("OUT", scanner.Text())
 			continue
@@ -58,6 +55,8 @@ func (q *Queue) Read() []*Queue {
 			tmp.Weight, _ = strconv.Atoi(strings.Split(scanner.Text(), ":")[1])
 		case 3:
 			tmp.Priority, _ = strconv.Atoi(strings.Split(scanner.Text(), ":")[1])
+			final = append(final, tmp)
+			tmp = &Queue{}
 		}
 		fmt.Println(tmp)
 		fmt.Println("IN", scanner.Text())
@@ -87,9 +86,15 @@ func MockQueue() []*Queue {
 	}
 }
 
-func SortedAppend(que []*Queue, request *Queue) []*Queue {
+func sortedAppend(que []*Queue, request *Queue) []*Queue {
 	index := sort.Search(len(que), func(i int) bool {
-		return que[i].Weight > request.Weight && que[i].Priority > request.Priority
+		if que[i].Weight < request.Weight {
+			return que[i].Priority < request.Priority
+		}
+		if que[i].Priority < request.Priority {
+			return que[i].Weight < request.Weight
+		}
+		return false
 	})
 	que = append(que, &Queue{})
 	copy(que[index+1:], que[index:])
@@ -120,12 +125,24 @@ func ProxyMiddleware(c iris.Context) {
 	var repo Repository
 	repo = &Queue{}
 	fmt.Println("FROM HEADER", domain)
+
 	// Method 1: Insert and then sort by Weight and Priority
-	for _, row := range repo.Read() {
-		fmt.Println("FROM SOURCE", row.Domain)
-		Que = append(Que, row)
-	}
+	Que = repo.Read()
 	customSorting(Que)
-	fmt.Println("QUEUE", Que)
+	for _, row := range Que {
+		fmt.Println("FROM SOURCE and Ordered", row.Domain)
+		fmt.Println(row.Priority, row.Weight)
+	}
+
+	var OrderedQueue []*Queue
+	// Method 2, read each value and pushed ordered
+	for _, row := range repo.Read() {
+		OrderedQueue = sortedAppend(OrderedQueue, row)
+	}
+	for _, row := range OrderedQueue {
+		fmt.Println("FROM SOURCE and Ordered 2", row.Domain)
+		fmt.Println(row.Priority, row.Weight)
+	}
+
 	c.Next()
 }

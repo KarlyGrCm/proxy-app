@@ -102,7 +102,7 @@ func sortedAppend(que []*Queue, request *Queue) []*Queue {
 	return que
 }
 
-func customSorting(queue []*Queue) []*Queue {
+func CustomSorting(queue []*Queue) []*Queue {
 	sort.Slice(queue, func(i, j int) bool {
 		if queue[i].Weight < queue[j].Weight {
 			return true
@@ -128,7 +128,7 @@ func ProxyMiddleware(c iris.Context) {
 
 	// Method 1: Insert and then sort by Weight and Priority
 	Que = repo.Read()
-	customSorting(Que)
+	CustomSorting(Que)
 	for _, row := range Que {
 		fmt.Println("FROM SOURCE and Ordered", row.Domain)
 		fmt.Println(row.Priority, row.Weight)

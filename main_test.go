@@ -1,15 +1,20 @@
+package main
+
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"encoding/json"
+
 	handlers "github.com/karlygrcm/proxy-app/api/handlers"
+	middleware "github.com/karlygrcm/proxy-app/api/middleware"
 	server "github.com/karlygrcm/proxy-app/api/server"
 	utils "github.com/karlygrcm/proxy-app/api/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -25,6 +30,13 @@ func init() {
 	wg.Wait()
 	fmt.Println("Server running...")
 
+}
+
+// Queue
+type Queue struct {
+	Domain   string
+	Weight   int
+	Priority int
 }
 
 type Response struct {
@@ -63,4 +75,44 @@ func mainTest(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, singleCase.Output, valuesToCompare.Response)
 	}
+}
+
+func customSortingTest(t *testing.T) {
+	initialQueue := []*middleware.Queue{
+		{
+			Domain:   "alpha",
+			Weight:   4,
+			Priority: 1,
+		},
+		{
+			Domain:   "omega",
+			Weight:   2,
+			Priority: 2,
+		},
+		{
+			Domain:   "beta",
+			Weight:   5,
+			Priority: 5,
+		},
+	}
+	expectedQueue := []*middleware.Queue{
+		{
+			Domain:   "alpha",
+			Weight:   5,
+			Priority: 5,
+		},
+		{
+			Domain:   "omega",
+			Weight:   4,
+			Priority: 1,
+		},
+		{
+			Domain:   "beta",
+			Weight:   2,
+			Priority: 2,
+		},
+	}
+	fmt.Println("test sort")
+	sorted := middleware.CustomSorting(initialQueue)
+	assert.Equal(t, sorted, expectedQueue)
 }
